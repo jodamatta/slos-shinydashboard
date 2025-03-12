@@ -1,5 +1,3 @@
-data(SampledData)
-
 load_SLOSModel <- function() {
   
   old <- options()
@@ -93,15 +91,19 @@ SLOS <- function(data) {
   # Compute median and interquartile range of SLOS
   slos_summary <- df_unit_slos %>%
     dplyr::summarise(
-      median_SLOS = median(SLOS, na.rm = TRUE),
       Q1 = quantile(SLOS, 0.25, na.rm = TRUE),
       Q3 = quantile(SLOS, 0.75, na.rm = TRUE)
-    )
+    ) %>%
+    as.list()
+  
+  slos_summary$IQR <- slos_summary$Q3 - slos_summary$Q1
   
   # Count units within Q1-Q3 range
   units_within_IQR <- df_unit_slos %>%
     dplyr::filter(SLOS >= slos_summary$Q1, SLOS <= slos_summary$Q3) %>%
     dplyr::count()
+  
+  theta = sum(df_unit_slos$soma_los_obs) / sum(df_unit_slos$soma_los_esp)
   
   # Using ems::funnel to generate funnel plot
   funnel_plot <- ems::funnel(unit = df_unit_slos$UnitCode,
@@ -120,5 +122,6 @@ SLOS <- function(data) {
               funnel_plot = funnel_plot,
               r_squared = r_squared,
               slos_summary = slos_summary,
-              units_within_IQR = units_within_IQR))
+              units_within_IQR = units_within_IQR,
+              theta = theta))
 }
