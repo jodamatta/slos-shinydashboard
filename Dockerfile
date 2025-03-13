@@ -1,16 +1,21 @@
-FROM rocker/r-ver:4.2.0
+FROM rocker/shiny:latest
 
-ENV RENV_VERSION=v1.0.2
-RUN R -e "install.packages('remotes')"
-RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
-RUN R -e "options(renv.config.repos.override = 'https://packagemanager.posit.co/cran/latest')"
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY . /app
+# Install R packages
+RUN R -e "install.packages(c(\"shiny\", \"shinydashboard\", \"shinyWidgets\", \"MLmetrics\", \"ranger\", \"caretEnsemble\", \"httr\", \"magrittr\", \"dplyr\", \"ggplot2\", \"ems\"), repos='http://cran.rstudio.com/')"
 
-WORKDIR /app
+# Copy app files
+WORKDIR /srv/shiny-server/
+COPY . /srv/shiny-server/
 
-RUN R -e "renv::restore()"
-
+# Expose Shiny port
 EXPOSE 3838
 
-CMD ["R", "-e", "shiny::runApp('app.R', host='0.0.0.0', port=3838)"]
+# Run app
+CMD ["R", "-e", "shiny::runApp('/srv/shiny-server', host='0.0.0.0', port=3838)"]
