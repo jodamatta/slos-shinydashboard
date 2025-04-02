@@ -1,6 +1,7 @@
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
+library(ems)
 library(httr)
 library(httr2)
 
@@ -161,7 +162,8 @@ server <- function(input, output) {
     #########################
     #       SLOS TEST       #
     #########################
-    # result <- SLOS(data_reactive()) 
+    # result <- SLOS(data_reactive())
+    
     temp_file <- tempfile(fileext =".rds")
     saveRDS(data_reactive(), temp_file)
     url_SLOS <- paste(url, "/SLOS_API", sep ="")
