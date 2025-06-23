@@ -6,7 +6,8 @@ library(httr)
 library(httr2)
 
 url <- "https://slos-api-48722054238.us-central1.run.app"
-
+options(shiny.usecps = FALSE)
+Sys.setlocale("LC_NUMERIC", "C")
 ui <- dashboardPage(
   dashboardHeader(title = "ICU Analysis"),
   
@@ -22,6 +23,16 @@ ui <- dashboardPage(
     tags$head(tags$style(HTML("
       .content-wrapper, .right-side { min-height: 100vh !important; }
     "))),
+    tags$html(lang = "en"),
+    tags$script(HTML("
+  document.addEventListener('shiny:connected', function() {
+    const allNumericInputs = document.querySelectorAll('input[type=\"number\"]');
+    allNumericInputs.forEach(el => {
+      el.setAttribute('lang', 'en');
+      el.setAttribute('inputmode', 'decimal');
+    });
+  });
+")),
     
     tabItems(
       tabItem(tabName = "efficiency",
@@ -103,11 +114,13 @@ ui <- dashboardPage(
                     numericInput("lowest_gcs", "Lowest Glasgow Coma Scale (3-15):", value = 15, min = 3, max = 15)
                 ),
                 
-                box(title = "Use of Devices (first 24h)", status = "danger", solidHeader = TRUE, width = 4,
+                box(title = "Complications (first 24h)", status = "danger", solidHeader = TRUE, width = 4,
                     checkboxInput("ventilation", "Non-invasive Ventilation at admission", FALSE),
                     checkboxInput("resp_failure", "Respiratory Failure at admission", FALSE),
                     checkboxInput("is_mechanical_ventilation", "Mechanical Ventilation", FALSE),
-                    checkboxInput("is_vasopressors", "Vasopressors at admission", FALSE)
+                    checkboxInput("is_vasopressors", "Vasopressors at admission", FALSE),
+                    checkboxInput("aaf", "Acute Atrial Fibrillation", FALSE),
+                    checkboxInput("aki", "Acute Kidney Injury", FALSE),
                 ),
                 
                 box(title = "Comorbidities", status = "danger", solidHeader = TRUE, width = 4,
@@ -124,8 +137,6 @@ ui <- dashboardPage(
                              checkboxInput("arrhythmia", "Cardiac Arrhythmia", FALSE)
                       ),
                       column(6,
-                             checkboxInput("aaf", "Acute Atrial Fibrillation", FALSE),
-                             checkboxInput("aki", "Acute Kidney Injury", FALSE),
                              checkboxInput("angina", "Angina", FALSE),
                              checkboxInput("asystole", "Asystole", FALSE),
                              checkboxInput("transplant", "Cardiac Transplant", FALSE),
