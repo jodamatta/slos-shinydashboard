@@ -115,10 +115,10 @@ ui <- dashboardPage(
                 ),
                 
                 box(title = "Complications (first 24h)", status = "danger", solidHeader = TRUE, width = 4,
-                    checkboxInput("ventilation", "Non-invasive Ventilation at admission", FALSE),
-                    checkboxInput("resp_failure", "Respiratory Failure at admission", FALSE),
+                    checkboxInput("ventilation", "Non-invasive Ventilation", FALSE),
+                    checkboxInput("resp_failure", "Respiratory Failure", FALSE),
                     checkboxInput("is_mechanical_ventilation", "Mechanical Ventilation", FALSE),
-                    checkboxInput("is_vasopressors", "Vasopressors at admission", FALSE),
+                    checkboxInput("is_vasopressors", "Vasopressors", FALSE),
                     checkboxInput("aaf", "Acute Atrial Fibrillation", FALSE),
                     checkboxInput("aki", "Acute Kidney Injury", FALSE),
                 ),
