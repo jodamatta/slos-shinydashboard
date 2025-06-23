@@ -93,13 +93,13 @@ ui <- dashboardPage(
                 ),
                 
                 box(title = "Clinical Measurements", status = "warning", solidHeader = TRUE, width = 4,
-                    numericInput("urea", "Urea (first 1h):", value = 37, min = 0),
+                    numericInput("urea", "Urea (first 1h)(mg/dL):", value = 37, min = 0),
                     numericInput("length_hospital_stay", "Length of Hospital Stay Prior to ICU (days):", value = 0, min = 0),
-                    numericInput("creatinine", "Highest Creatinine (first 1h)", value = 0.9, min = 0),
-                    numericInput("high_heart", "Highest Heart Rate (first 1h):", value = 79, min = 0, max = 200),
-                    numericInput("high_temp", "Highest temperature (first 1h):", value = 36.1, min = 0, max = 50),
-                    numericInput("high_leuko", "Highest Leukocyte count (first 1h):", value = 8.9, min = 0),
-                    numericInput("high_resp", "Highest Respiratory Rate (first 1h):", value = 18, min = 0),
+                    numericInput("creatinine", "Highest Creatinine (first 1h)(mg/dL)", value = 0.9, min = 0),
+                    numericInput("high_heart", "Highest Heart Rate (first 1h)(beats per minute):", value = 79, min = 0, max = 200),
+                    numericInput("high_temp", "Highest temperature (first 1h)(Celsius):", value = 36.1, min = 0, max = 50),
+                    numericInput("high_leuko", "Highest Leukocyte count (first 1h):(10³/µL)", value = 8.9, min = 0),
+                    numericInput("high_resp", "Highest Respiratory Rate (first 1h)(breaths per minute):", value = 18, min = 0),
                     numericInput("lowest_gcs", "Lowest Glasgow Coma Scale (3-15):", value = 15, min = 3, max = 15)
                 ),
                 
