@@ -1,0 +1,13 @@
+name: slos-dashboard
+title: slos-dashboard
+username: joanadamatta
+account: joanadamatta
+server: connect.posit.cloud
+hostUrl: https://api.connect.posit.cloud/v1
+appId: 019df457-566e-b007-7b28-dfa0754ca9d1
+bundleId:
+url: https://connect.posit.cloud/joanadamatta/content/019df457-566e-b007-7b28-dfa0754ca9d1
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: README.md|docs

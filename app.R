@@ -2,9 +2,11 @@ library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
 library(shinylive)
+library(shinycssloaders)
 library(ems)
 library(httr)
 library(httr2)
+library(ggplot2)
 
 url <- "https://slos-api-48722054238.us-central1.run.app"
 options(shiny.usecps = FALSE)
@@ -22,7 +24,10 @@ ui <- dashboardPage(
   dashboardBody(
     
     tags$head(tags$style(HTML("
-      .content-wrapper, .right-side { min-height: 100vh !important; }
+      .content-wrapper, .right-side { min-height: 100vh !important; }, .shiny-spinner-output-container {
+    display: inline-block !important;
+    width: auto !important;
+  }
     "))),
     tags$html(lang = "en"),
     tags$script(HTML("
@@ -150,15 +155,18 @@ ui <- dashboardPage(
                   title = "Predicted Length of Stay:",
                   status = "success",
                   solidHeader = TRUE,
-                  width = 6,  # Adjust width as needed
+                  width = 6,
                   fluidRow(
-                    column(width = 6,
+                    column(width = 4,
                            textOutput("predict_status"),
                            actionButton("predict", "Predict", icon = icon("calculator"), class = "btn-success")
                     ),
-                    column(width = 6,
-                           tags$h4("Result:"),
-                           verbatimTextOutput("prediction")
+                    column(width = 3,
+                           withSpinner(
+                             verbatimTextOutput("prediction"),
+                             type = 6,
+                             size = 0.4
+                           )
                     )
                   )
                 ),
@@ -184,10 +192,6 @@ server <- function(input, output) {
   
   ### ICU EFFICIENCY
   
-  observeEvent(input$data_file, {
-    status$eval <- "Evaluating..."  
-  })
-  
   output$eval_status <- renderText({ req(status$eval); status$eval })
   
   data_reactive <- reactive({
@@ -197,13 +201,17 @@ server <- function(input, output) {
     env <- new.env()
     load(input$data_file$datapath, envir = env)
     
-    obj_name <- ls(env)[1]  
-    data <- env[[obj_name]]
+    objs <- ls(env)
     
-    validate(
-      need(is.data.frame(data) || is.tibble(data), 
-           "The uploaded file must contain a data frame.")
-    )
+    #validate(
+    #  need(length(objs) > 0, "No objects found in the uploaded file.")
+    #)
+    
+    data <- env[[objs[1]]]
+    
+    #validate(
+    #  need(is.data.frame(data), "The uploaded file must contain a data frame.")
+    #)
     
     return(data)
   })
@@ -245,7 +253,19 @@ server <- function(input, output) {
   
   output$slos_plot <- renderPlot({
     req(result_metrics_reactive())
-    plot(result_metrics_reactive()$plot_SLOS_obs_prev)
+    
+    p <- result_metrics_reactive()$plot_SLOS_obs_prev
+    df <- p$data
+    
+    ggplot(df, aes(x = soma_los_esp, y = soma_los_obs)) +
+      geom_point() +
+      geom_smooth(se = TRUE) +
+      geom_abline(intercept = 0, slope = 1) +
+      labs(
+        x = "Sum of predicted ICU LoS",
+        y = "Sum of observed ICU LoS",
+        title = "Grouped LoS per Unit (days)"
+      )
   })
   
   output$r_squared <- renderText({
@@ -297,15 +317,8 @@ server <- function(input, output) {
   output$eval_status <- renderText({ status$eval })
   
   ### PATIENT PREDICTOR
-  
-  observeEvent(input$predict, {
-    status$predict <- "Predicting..."  
-  })
-  
-  output$predict_status <- renderText({ req(status$predict); status$predict })
-  
-  observeEvent(input$predict, {
-    status$predict <- ""
+  predicted_los <- eventReactive(input$predict, {
+    
     predictors <- data.frame(
       UnitCode = "00",
       UnitLengthStay_trunc = 0,
@@ -342,31 +355,29 @@ server <- function(input, output) {
       IsCirrhosis = factor(input$cirrhosis),
       IsCrf = factor(input$crf)
     )
-    #######################
-    #   TEST PREDICTION   #
-    #######################
-    # predicted_los <- predict_and_evaluate(predictors)
-    url_pne <- paste(url, "/predict_and_evaluate_API", sep="")
     
     temp_file <- tempfile(fileext = ".rds")
     saveRDS(predictors, temp_file)
     
-    response <- request("https://slos-api-48722054238.us-central1.run.app/predict_and_evaluate_API") %>%
+    response <- request(paste(url, "/predict_and_evaluate_API", sep="")) %>%
       req_body_multipart(file = upload_file(temp_file)) %>%
       req_timeout(200) %>%
       req_perform()
     
     temp_rds_file <- tempfile(fileext = ".rds")
-    
     writeBin(resp_body_raw(response), temp_rds_file)
     
-    predicted_los <- readRDS(temp_rds_file)
-    unlink(temp_file)
+    result <- readRDS(temp_rds_file)
     
-    output$prediction <- renderText({
-      paste0(round(predicted_los$predictions, 2), " days")
-    })
-    output$predict_status <- renderText({ status$predict })
+    unlink(temp_file)
+    unlink(temp_rds_file)
+    
+    result
+  })
+  
+  output$prediction <- renderText({
+    req(predicted_los())
+    paste0(round(predicted_los()$predictions, 2), " days")
   })
 }
 
